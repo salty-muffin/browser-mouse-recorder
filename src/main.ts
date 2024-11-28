@@ -29,7 +29,7 @@ if (outputText && outputRecording) {
 
 				recordingStart = Date.now();
 			} else {
-				outputText.innerText = 'Recording stopped. See console for data';
+				outputText.innerText = 'Recording stopped. See console for data.';
 				outputRecording.classList.remove('active');
 
 				// console.log(JSON.stringify(scrollData, null, '  '));
