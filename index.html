@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
@@ -7,7 +7,11 @@
 	</head>
 	<body>
 		<div id="container">
-			<iframe id="frame" src="" frameborder="0"></iframe>
+			{{> placeholders}}
+			<div id="output">
+				<span id="recording"></span>
+				<span id="text">This is a test</span>
+			</div>
 		</div>
 		<script type="module" src="/src/main.ts"></script>
 	</body>
