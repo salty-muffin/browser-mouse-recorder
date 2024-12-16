@@ -5,7 +5,6 @@
 
 	import { onMount } from 'svelte';
 
-	import type { MouseData } from '$lib/types';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -18,6 +17,16 @@
 
 	let recordingStart: number;
 	let scrollData: MouseData[] = [];
+
+	type MouseDataType = 'move' | 'scroll';
+	interface MouseData {
+		type: MouseDataType;
+		scrollDeltaX?: number;
+		scrollDeltaY?: number;
+		mouseX?: number;
+		mouseY?: number;
+		timestampMs: number;
+	}
 
 	const handleKeydown = async (event: KeyboardEvent) => {
 		if (event.code === 'Space') {
@@ -47,8 +56,8 @@
 		if (recording && recordScroll) {
 			scrollData.push({
 				type: 'scroll',
-				deltaX: event.deltaX,
-				deltaY: event.deltaY,
+				scrollDeltaX: event.deltaX,
+				scrollDeltaY: event.deltaY,
 				timestampMs: Date.now() - recordingStart
 			});
 		}
@@ -58,22 +67,22 @@
 		if (recording && recordMouseMove) {
 			scrollData.push({
 				type: 'move',
-				offsetX: event.offsetX / window.innerWidth,
-				offsetY: event.offsetY / window.innerHeight,
+				mouseX: event.clientX / window.innerWidth,
+				mouseY: event.clientY / window.innerHeight,
 				timestampMs: Date.now() - recordingStart
 			});
 		}
 	};
 
 	onMount(() => {
-		document.addEventListener('keydown', handleKeydown);
-		document.addEventListener('wheel', handleScroll);
-		document.addEventListener('mousemove', handleMouseMove);
+		window.addEventListener('keydown', handleKeydown);
+		window.addEventListener('wheel', handleScroll);
+		window.addEventListener('mousemove', handleMouseMove);
 
 		return () => {
-			document.removeEventListener('keydown', handleKeydown);
-			document.removeEventListener('wheel', handleScroll);
-			document.removeEventListener('mousemove', handleMouseMove);
+			window.removeEventListener('keydown', handleKeydown);
+			window.removeEventListener('wheel', handleScroll);
+			window.removeEventListener('mousemove', handleMouseMove);
 		};
 	});
 </script>
