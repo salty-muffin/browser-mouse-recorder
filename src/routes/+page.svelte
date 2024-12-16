@@ -20,8 +20,9 @@
 	let scrollPosition = $state({ x: 0, y: 0 });
 	let innerWidth = $state(0);
 	let innerHeight = $state(0);
+
 	$effect(() => {
-		console.log(cursorPosition.x * innerWidth, cursorPosition.y * innerHeight);
+		window.scrollTo({ left: scrollPosition.x, top: scrollPosition.y, behavior: 'smooth' });
 	});
 
 	let recordingStart: number;
@@ -75,7 +76,6 @@
 
 				textOutput = `'Recording started...'`;
 			} else {
-				console.log(recordingData);
 				const response = await fetch('/save', {
 					method: 'POST',
 					body: JSON.stringify(recordingData),
