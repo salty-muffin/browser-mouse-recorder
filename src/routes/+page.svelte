@@ -13,10 +13,21 @@
 	let recordMouseMove = $state(true);
 
 	let recording = $state(false);
+	let playing = $state(false);
 	let textOutput = $state('Press SPACE to start and stop recording.');
 
+	let cursorPosition = $state({ x: 0, y: 0 });
+	let scrollPosition = $state({ x: 0, y: 0 });
+	let innerWidth = $state(0);
+	let innerHeight = $state(0);
+	$effect(() => {
+		console.log(cursorPosition.x * innerWidth, cursorPosition.y * innerHeight);
+	});
+
 	let recordingStart: number;
-	let scrollData: MouseData[] = [];
+	let recordingData: MouseData[];
+	let playbackStart: number;
+	let playbackData: MouseData[];
 
 	type MouseDataType = 'move' | 'scroll';
 	interface MouseData {
@@ -28,33 +39,72 @@
 		timestampMs: number;
 	}
 
+	const play = (timestamp: number) => {
+		if (!playbackData.length) playing = false;
+
+		let currentData: MouseData | null = null;
+		while (playbackData.length && playbackData[0].timestampMs <= timestamp - playbackStart) {
+			currentData = playbackData.shift() ?? null;
+		}
+		if (currentData) {
+			if (currentData.type === 'move') {
+				cursorPosition = { x: currentData.mouseX as number, y: currentData.mouseY as number };
+			} else if (currentData.type === 'scroll') {
+				scrollPosition = {
+					x: Math.max((currentData.scrollDeltaX as number) + scrollPosition.x, 0),
+					y: Math.max((currentData.scrollDeltaY as number) + scrollPosition.y, 0)
+				};
+			}
+		}
+		if (playing) {
+			requestAnimationFrame(play);
+		} else {
+			textOutput = 'Press SPACE to start and stop recording. Press P to play last recording.';
+		}
+	};
+
 	const handleKeydown = async (event: KeyboardEvent) => {
-		if (event.code === 'Space') {
+		if (event.code === 'Space' && !playing) {
+			event.preventDefault(); // Prevent default spacebar behavior (scrolling)
+
+			// Recording
 			recording = !recording; // Toggle recording state
 			if (recording) {
-				textOutput = `'Recording started...'`;
-
+				recordingData = []; // Clear the data berfore recording
 				recordingStart = Date.now();
+
+				textOutput = `'Recording started...'`;
 			} else {
-				console.log(scrollData);
+				console.log(recordingData);
 				const response = await fetch('/save', {
 					method: 'POST',
-					body: JSON.stringify(scrollData),
+					body: JSON.stringify(recordingData),
 					headers: {
 						'content-type': 'application/json'
 					}
 				});
-				scrollData = []; // Clear the data after logging
 
-				textOutput = `Recording stopped. Saved on the server as '${(await response.json()).filename}'`;
+				textOutput = `Recording stopped. Saved on the server as '${(await response.json()).filename}'. Press P to play last recording.`;
 			}
-			event.preventDefault(); // Prevent default spacebar behavior (scrolling)
+		} else if (event.code === 'KeyP' && !recording) {
+			event.preventDefault();
+
+			// Playback
+			playing = !playing;
+			if (playing) {
+				playbackData = [...recordingData];
+				playbackStart = Number(document.timeline.currentTime);
+
+				requestAnimationFrame(play);
+
+				textOutput = `'Playback started...'`;
+			}
 		}
 	};
 
 	const handleScroll = (event: WheelEvent) => {
 		if (recording && recordScroll) {
-			scrollData.push({
+			recordingData.push({
 				type: 'scroll',
 				scrollDeltaX: event.deltaX,
 				scrollDeltaY: event.deltaY,
@@ -65,10 +115,10 @@
 
 	const handleMouseMove = (event: MouseEvent) => {
 		if (recording && recordMouseMove) {
-			scrollData.push({
+			recordingData.push({
 				type: 'move',
-				mouseX: event.clientX / window.innerWidth,
-				mouseY: event.clientY / window.innerHeight,
+				mouseX: event.clientX / innerWidth,
+				mouseY: event.clientY / innerHeight,
 				timestampMs: Date.now() - recordingStart
 			});
 		}
@@ -87,12 +137,14 @@
 	});
 </script>
 
+<svelte:window bind:innerWidth bind:innerHeight />
+
 <div id="container">
 	{#each data.placeholders as placeholder}
 		<Placeholder {...placeholder} />
 	{/each}
 	<div id="output" class="overlay">
-		<span id="recording" class:recording></span>
+		<span id="recording" class:recording class:playing></span>
 		<span id="text">{textOutput}</span>
 	</div>
 	<div id="settings" class="overlay">
@@ -105,6 +157,12 @@
 			<label for="mouse">Record mouse events</label>
 		</div>
 	</div>
+	<div
+		id="cursor"
+		class:playing
+		style:left="{cursorPosition.x * innerWidth}px"
+		style:top="{cursorPosition.y * innerHeight}px"
+	></div>
 </div>
 
 <style lang="scss">
@@ -147,6 +205,23 @@
 
 		&.recording {
 			background-color: red;
+		}
+
+		&.playing {
+			background-color: green;
+		}
+	}
+
+	#cursor {
+		width: 20px;
+		height: 20px;
+		background-color: white;
+
+		position: fixed;
+		display: none;
+
+		&.playing {
+			display: block;
 		}
 	}
 </style>
