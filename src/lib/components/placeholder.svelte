@@ -1,9 +1,7 @@
 <script lang="ts">
-	interface Props {
-		image?: false | 'half' | 'full';
-		comment?: boolean;
-	}
-	const { image = false, comment = false }: Props = $props();
+	import type { Placeholder } from '$lib/types';
+
+	const { image = false, comment = false }: Partial<Placeholder> = $props();
 </script>
 
 <div class="placeholder">
