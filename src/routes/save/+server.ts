@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	// Ffind index of last saved data file
 	const index = existingFiles.length ? existingFiles[existingFiles.length - 1].match(/\d+/g) : null;
-	const newIndex = index ? parseInt(index[0] + 1) : 0;
+	const newIndex = index ? parseInt(index[0]) + 1 : 0;
 	// Increment index or start with 0
 	const filename = path.join(dataDir, `scrolldata_${String(newIndex).padStart(2, '0')}.json`);
 
