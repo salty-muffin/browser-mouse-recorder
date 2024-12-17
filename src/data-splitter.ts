@@ -11,6 +11,7 @@ if (args.length === 0) {
 }
 
 const dataFilePath = args[0];
+const maxDecimals = args.length >= 2 ? Number(args[1]) : 4;
 
 // Read data from file
 const data: MouseData[] = JSON.parse(fs.readFileSync(dataFilePath, 'utf-8'));
@@ -27,11 +28,23 @@ const scrollData: Data[] = [];
 // Iterate data and push it to the respective arrays
 for (const item of data) {
 	if (item.type === 'move') {
-		moveData.push({ x: item.mouseX as number, y: item.mouseY as number, t: item.timestampMs });
+		moveData.push({
+			x:
+				Math.round(((item.mouseX as number) + Number.EPSILON) * Math.pow(10, maxDecimals)) /
+				Math.pow(10, maxDecimals),
+			y:
+				Math.round(((item.mouseY as number) + Number.EPSILON) * Math.pow(10, maxDecimals)) /
+				Math.pow(10, maxDecimals),
+			t: item.timestampMs
+		});
 	} else if (item.type === 'scroll') {
 		scrollData.push({
-			x: item.scrollDeltaX as number,
-			y: item.scrollDeltaY as number,
+			x:
+				Math.round(((item.scrollDeltaX as number) + Number.EPSILON) * Math.pow(10, maxDecimals)) /
+				Math.pow(10, maxDecimals),
+			y:
+				Math.round(((item.scrollDeltaY as number) + Number.EPSILON) * Math.pow(10, maxDecimals)) /
+				Math.pow(10, maxDecimals),
 			t: item.timestampMs
 		});
 	}
