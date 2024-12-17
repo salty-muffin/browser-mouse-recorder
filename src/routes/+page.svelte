@@ -5,6 +5,7 @@
 
 	import { onMount } from 'svelte';
 
+	import type { MouseData } from '$lib/types';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -29,16 +30,6 @@
 	let recordingData: MouseData[];
 	let playbackStart: number;
 	let playbackData: MouseData[];
-
-	type MouseDataType = 'move' | 'scroll';
-	interface MouseData {
-		type: MouseDataType;
-		scrollDeltaX?: number;
-		scrollDeltaY?: number;
-		mouseX?: number;
-		mouseY?: number;
-		timestampMs: number;
-	}
 
 	const play = (timestamp: number) => {
 		if (!playbackData.length) playing = false;
